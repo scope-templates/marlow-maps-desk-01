@@ -1,0 +1,402 @@
+[
+  {
+    "ticket_id": "T-4200",
+    "customer": "dev@quayside-logistics.example",
+    "question": "Every delivery to our receiver fails the signature check. We parse the JSON, dump it back to a string and HMAC that with our secret. What are we doing wrong?",
+    "faq_id": null,
+    "draft": null,
+    "reply": "The signature is the HMAC-SHA256 of the raw body bytes exactly as we sent them, so parsing and dumping the JSON changes whitespace and key order and it will never match. In Flask, read the body with request.get_data() before parsing, compute the hex digest with your mmws_ signing secret and compare it to X-Marlow-Signature with hmac.compare_digest. The details are on https://github.com/scope-templates/marlow-birchwell-docs-01/blob/main/marlow/webhook-signatures.md.",
+    "opened_at": "2026-09-01T09:00:00+00:00",
+    "replied_at": "2026-09-01T09:34:00+00:00"
+  },
+  {
+    "ticket_id": "T-4201",
+    "customer": "ops@liffey-dispatch.example",
+    "question": "Lots of our Irish customers only type an Eircode. Will that alone get us a doorstep-accurate pin?",
+    "faq_id": null,
+    "draft": null,
+    "reply": "Usually, yes. Since 16 March 2026, Eircode-only addresses in Ireland resolve to rooftop precision where the Eircode identifies a single building. Pass \"country\": \"IE\" with the request so nothing gets mixed up across borders, and still check precision on each result in case an Eircode covers more than one building.",
+    "opened_at": "2026-09-02T14:37:00+00:00",
+    "replied_at": "2026-09-02T15:49:00+00:00"
+  },
+  {
+    "ticket_id": "T-4202",
+    "customer": "backend@saltmarsh-services.example",
+    "question": "How do I authenticate API requests from our backend?",
+    "faq_id": "auth-header",
+    "draft": "Send your key in the X-Marlow-Key header on every request, like this: X-Marlow-Key: <key>. The same header works for geocoding, batch geocoding and routing calls. Keep the key on your own server rather than inside a driver app or a web page.",
+    "reply": "Send your key in the X-Marlow-Key header on every request, like this: X-Marlow-Key: <key>. The same header works for geocoding, batch geocoding and routing calls. Keep the key on your own server rather than inside a driver app or a web page.",
+    "opened_at": "2026-09-03T11:14:00+00:00",
+    "replied_at": "2026-09-03T11:32:00+00:00"
+  },
+  {
+    "ticket_id": "T-4203",
+    "customer": "privacy@fernhill-parcels.example",
+    "question": "Quick compliance question: how long does Marlow keep the addresses we send for geocoding?",
+    "faq_id": null,
+    "draft": null,
+    "reply": "Geocode request logs, meaning the address, the result and the request id, are kept for 30 days and stored in the EU; batch inputs are treated the same way. If you need specific addresses erased sooner, email privacy@marlowmaps.com with the request ids or the addresses and it is done within 30 days. We also do not keep the ref values from batch requests once the response is sent.",
+    "opened_at": "2026-09-04T16:51:00+00:00",
+    "replied_at": "2026-09-04T19:16:00+00:00"
+  },
+  {
+    "ticket_id": "T-4204",
+    "customer": "dev@kestrel-field.example",
+    "question": "any way to trigger a fake event at our staging receiver? waiting for real traffic to test is painful",
+    "faq_id": null,
+    "draft": null,
+    "reply": "There is. POST /v2/webhooks/{id}/test with a body like {\"type\": \"route.recalculated\"} queues a synthetic event to that endpoint, signed with its real secret and carrying \"test\": true at the top level. It follows the normal retry schedule, so returning a 500 on purpose lets you watch the retries. Endpoints must be public HTTPS on port 443, so from a laptop use a tunnelling tool and register that address with a test key. The details are on https://github.com/scope-templates/marlow-birchwell-docs-01/blob/main/marlow/webhook-testing.md.",
+    "opened_at": "2026-09-05T10:28:00+00:00",
+    "replied_at": "2026-09-05T11:19:00+00:00"
+  },
+  {
+    "ticket_id": "T-4205",
+    "customer": "checkout@colis-rapide.example",
+    "question": "Which endpoint should I call to geocode a single address from our checkout?",
+    "faq_id": "geocode-endpoint",
+    "draft": "Call GET /v1/geocode?address=... on https://api.marlowmaps.com with the address URL-encoded in the query string. The response gives you the coordinates and a precision value for the match. It is a plain GET, so you can try it from curl with nothing more than your key header.",
+    "reply": "Use POST /v2/geocode with a JSON body {\"address\": \"...\"} and your X-Marlow-Key header; the address goes in the body, not the query string. GET /v1/geocode was retired on 2025-06-30 and now returns 410 endpoint_retired. Each result comes back with coordinates and a precision of rooftop, street or locality.",
+    "opened_at": "2026-09-06T19:05:00+00:00",
+    "replied_at": "2026-09-06T22:45:00+00:00"
+  },
+  {
+    "ticket_id": "T-4206",
+    "customer": "backend@brackenvans.example",
+    "question": "Client-side timeout on POST /v2/routes, our code tried again, and now the same van has two identical routes. How do we stop that?",
+    "faq_id": null,
+    "draft": null,
+    "reply": "Creating a route is the one call that is not safe to repeat blindly. Send an Idempotency-Key header on POST /v2/routes and we return the first route for any repeat with the same key within 24 hours. Geocodes, matrices and optimisations have no side effects, so those are always safe to try again. The details are on https://github.com/scope-templates/marlow-birchwell-docs-01/blob/main/marlow/timeouts-and-retries.md.",
+    "opened_at": "2026-09-07T08:19:00+00:00",
+    "replied_at": "2026-09-07T08:45:00+00:00"
+  },
+  {
+    "ticket_id": "T-4207",
+    "customer": "support@tidewaycourier.example",
+    "question": "A driver reported a pin that was 200 metres off on an order from three weeks ago. What do you need from us to look into it?",
+    "faq_id": null,
+    "draft": null,
+    "reply": "Send us the X-Request-Id from that lookup (it looks like req_7c1e93a0), what you expected, and the correct address or coordinates if you have them. Request logs are kept for 30 days, so at three weeks we can still find it if it reaches us this week. For next time, it is worth storing the request id on the order next to the coordinates.",
+    "opened_at": "2026-09-07T13:42:00+00:00",
+    "replied_at": "2026-09-07T15:17:00+00:00"
+  },
+  {
+    "ticket_id": "T-4208",
+    "customer": "platform@harbourline-delivery.example",
+    "question": "The contractor who had our live key has left. What's the safe way to swap it without downtime?",
+    "faq_id": null,
+    "draft": null,
+    "reply": "Create, deploy, verify, revoke, in that order. An account can hold up to 10 active keys, so create the replacement under Settings, then API keys, roll it out to every service, and wait until the old key's \"last used\" time stops moving. Then revoke it; within about a minute anything still using it gets 403 key_revoked. The details are on https://github.com/scope-templates/marlow-birchwell-docs-01/blob/main/marlow/key-rotation.md.",
+    "opened_at": "2026-09-08T15:56:00+00:00",
+    "replied_at": "2026-09-08T16:37:00+00:00"
+  },
+  {
+    "ticket_id": "T-4209",
+    "customer": "platform@tidewaycourier.example",
+    "question": "What happens if we go over the rate limit during the morning rush?",
+    "faq_id": "rate-limit",
+    "draft": "Each key can make 600 requests per minute. Go over that and you get a 429 response with a Retry-After header saying how many seconds to wait. Wait at least that long before you try again rather than retrying straight away.",
+    "reply": "Each key can make 600 requests per minute, so the morning rush is the time to watch it. Go over that and you get a 429 response with a Retry-After header saying how many seconds to wait. Wait at least that long before you try again rather than retrying straight away.",
+    "opened_at": "2026-09-09T20:33:00+00:00",
+    "replied_at": "2026-09-09T21:36:00+00:00"
+  },
+  {
+    "ticket_id": "T-4210",
+    "customer": "qa@colis-rapide.example",
+    "question": "Staging and production return exactly the same coordinates. Should I be worried staging is quietly using a live key?",
+    "faq_id": null,
+    "draft": null,
+    "reply": "Not necessarily: test keys use the same address data as live keys, so identical coordinates are expected. To see which mode a service is in, check the X-Marlow-Mode header on any response, or key.mode from GET /v2/account. One difference to keep in mind is that routes made with a test key are only kept for 7 days.",
+    "opened_at": "2026-09-10T12:10:00+00:00",
+    "replied_at": "2026-09-10T15:10:00+00:00"
+  },
+  {
+    "ticket_id": "T-4211",
+    "customer": "lead@rheinkurier.example",
+    "question": "New hire on our team signed in to the dashboard but can't see any option for creating keys.",
+    "faq_id": null,
+    "draft": null,
+    "reply": "That is the Developer role working as intended. Only owners and admins can manage API keys, because every key carries the full 600 requests per minute and is billed. An owner or admin on your account can create the key; developers can still register webhook endpoints and read the delivery logs.",
+    "opened_at": "2026-09-11T17:47:00+00:00",
+    "replied_at": "2026-09-11T18:09:00+00:00"
+  },
+  {
+    "ticket_id": "T-4212",
+    "customer": "imports@ashgrove-grocers.example",
+    "question": "Batch question: how many addresses fit in one geocode request?",
+    "faq_id": "batch-geocode",
+    "draft": "A batch geocode request takes up to 100 addresses. For a longer list, split it into requests of 100 or fewer and send them one after another. Each address comes back with its own coordinates and precision, in the order you sent them.",
+    "reply": "A batch request takes up to 500 addresses per POST /v2/geocode/batch; the limit went up from 100 to 500 on 2025-04-14. Anything over 500 is rejected as a whole with 413 batch_too_large, so split longer lists into groups of 500. Results come back in the same order as your input, one per address.",
+    "opened_at": "2026-09-12T09:24:00+00:00",
+    "replied_at": "2026-09-12T10:52:00+00:00"
+  },
+  {
+    "ticket_id": "T-4213",
+    "customer": "data@ashgrove-grocers.example",
+    "question": "Halfway through exporting our routes the API started answering 400 with \"cursor expired\". Do we need to start over?",
+    "faq_id": null,
+    "draft": null,
+    "reply": "Yes, unfortunately. Cursors expire after 15 minutes, and an expired one returns 400 invalid_request with \"cursor expired\", so start again from the first page. Use limit=100 to cut the number of pages and keep moving through them so no cursor sits that long.",
+    "opened_at": "2026-09-13T21:01:00+00:00",
+    "replied_at": "2026-09-13T21:48:00+00:00"
+  },
+  {
+    "ticket_id": "T-4214",
+    "customer": "dev@northwind-couriers.example",
+    "question": "Parser crashed overnight on a geocode result with no postcode field. Is postcode guaranteed?",
+    "faq_id": null,
+    "draft": null,
+    "reply": "It is not: postcode is left out for locality results that do not have a single postcode. The components object is always present, with missing parts set to null, so that is the safer place to read from. Fields are only added within v2, never renamed, so your parser should also ignore fields it does not know.",
+    "opened_at": "2026-09-14T11:38:00+00:00",
+    "replied_at": "2026-09-14T13:48:00+00:00"
+  },
+  {
+    "ticket_id": "T-4215",
+    "customer": "web@pennant-plumbing.example",
+    "question": "Planning to validate addresses on our booking form before an engineer is dispatched. Which outcomes should we treat as errors?",
+    "faq_id": null,
+    "draft": null,
+    "reply": "Geocode the address with its country while the customer is still on the form. Accept rooftop with confidence of 0.8 or more, ask them to confirm the formatted_address for street, locality or low confidence, and treat only 404 no_match and 422 region_unsupported as errors. Use a short timeout, and if the lookup times out, accept the address and geocode it again later. The details are on https://github.com/scope-templates/marlow-birchwell-docs-01/blob/main/marlow/address-validation.md.",
+    "opened_at": "2026-09-15T14:15:00+00:00",
+    "replied_at": "2026-09-15T14:44:00+00:00"
+  },
+  {
+    "ticket_id": "T-4216",
+    "customer": "founder@pedalpost.example",
+    "question": "Where do I find my API key? We only signed up yesterday.",
+    "faq_id": "getting-a-key",
+    "draft": "Sign in to the dashboard and open Settings, then API keys. Live keys start with mm_live_ and test keys start with mm_test_, so use a test key while you build. You can create a new key and revoke an old one from the same page.",
+    "reply": "Sign in to the dashboard and open Settings, then API keys. Live keys start with mm_live_ and test keys start with mm_test_, so use a test key while you build. You can create a new key and revoke an old one from the same page.",
+    "opened_at": "2026-09-16T16:52:00+00:00",
+    "replied_at": "2026-09-16T17:49:00+00:00"
+  },
+  {
+    "ticket_id": "T-4217",
+    "customer": "apps@tidewaycourier.example",
+    "question": "Proof-of-delivery screen: we want to label every GPS fix along a driver's trace with a street name. Can reverse lookups be done in bulk?",
+    "faq_id": null,
+    "draft": null,
+    "reply": "There is no batch reverse endpoint, and each POST /v2/reverse-geocode counts as one geocode toward your monthly quota. For a whole trace, sample about one point every 30 seconds rather than every fix. You can also set radius_m (10 to 500 metres, default 100) to control how far it looks.",
+    "opened_at": "2026-09-17T10:29:00+00:00",
+    "replied_at": "2026-09-17T12:14:00+00:00"
+  },
+  {
+    "ticket_id": "T-4218",
+    "customer": "cto@quayside-logistics.example",
+    "question": "Are we allowed to store coordinates in our own database so repeat customers don't trigger a new lookup every time?",
+    "faq_id": null,
+    "draft": null,
+    "reply": "Yes, that is the intended use: you can keep the coordinates and formatted_address for as long as you have the customer relationship. Re-geocode when the stored precision is street or locality and the address is used again, when the result is older than twelve months, or when it still carries a v1 value. What you may not do is resell the results or publish them as a dataset.",
+    "opened_at": "2026-09-18T18:06:00+00:00",
+    "replied_at": "2026-09-18T18:44:00+00:00"
+  },
+  {
+    "ticket_id": "T-4219",
+    "customer": "dispatch@harbourline-delivery.example",
+    "question": "If our endpoint is down during a deploy, how long do route recalculation webhooks keep trying?",
+    "faq_id": "route-webhooks",
+    "draft": "If your endpoint does not answer with a 2xx, we retry the route recalculation webhook 3 times over 10 minutes. After the third failed attempt we stop trying, so the event is not delivered again. Answer quickly with a 200 and do any slow work after you have replied.",
+    "reply": "Route recalculation webhooks are retried 5 times over 30 minutes with backoff (1, 3, 8, 15 and 30 minutes after the original attempt), and your endpoint has 10 seconds to answer with a 2xx. Every delivery is signed with X-Marlow-Signature, the HMAC-SHA256 of the raw body keyed with your endpoint's signing secret, so verify that before you parse anything. If all six attempts fail, you can still replay the delivery from the delivery log for 14 days.",
+    "opened_at": "2026-09-19T09:20:00+00:00",
+    "replied_at": "2026-09-19T10:36:00+00:00"
+  },
+  {
+    "ticket_id": "T-4220",
+    "customer": "imports@fernhill-parcels.example",
+    "question": "We're about to run 80,000 rows from a CRM export through batch geocoding. Any tips so we don't hit limits?",
+    "faq_id": null,
+    "draft": null,
+    "reply": "Deduplicate first; on a typical delivery-history export that removes about a third of the rows and the same share of quota. Send groups of 500 with each row's primary key as ref. Up to four workers sharing one key is safe, as long as you back off when X-RateLimit-Remaining drops below 20. Every address uses one geocode from your quota, no_match ones included, so try a 500-row sample with a test key first. The details are on https://github.com/scope-templates/marlow-birchwell-docs-01/blob/main/marlow/batch-best-practices.md.",
+    "opened_at": "2026-09-19T13:43:00+00:00",
+    "replied_at": "2026-09-19T14:17:00+00:00"
+  },
+  {
+    "ticket_id": "T-4221",
+    "customer": "dispatch@brackenvans.example",
+    "question": "What's the most stops one route can have? Our longest van run is about 140 drops.",
+    "faq_id": null,
+    "draft": null,
+    "reply": "A route takes 2 to 100 stops, and anything over that returns 422 too_many_stops, so a 140-drop run needs to be two routes. The order you send is the order driven. If you want us to choose the order, call POST /v2/optimize first and pass its order to POST /v2/routes.",
+    "opened_at": "2026-09-20T14:57:00+00:00",
+    "replied_at": "2026-09-20T16:09:00+00:00"
+  },
+  {
+    "ticket_id": "T-4222",
+    "customer": "tech@pedalpost.example",
+    "question": "We've moved half our city couriers onto e-cargo bikes. Can the routing handle that, or is it cars and vans only?",
+    "faq_id": null,
+    "draft": null,
+    "reply": "It can: the bicycle profile, added in November 2025, uses cycle lanes, quiet streets and permitted paths at a fixed 16 km/h, slower uphill. Bear in mind that only car and van routes use traffic, so a bicycle route with \"recalculate\": true only recalculates when a stop is added or removed. Every profile costs the same against the rate limit and your quota.",
+    "opened_at": "2026-09-21T11:34:00+00:00",
+    "replied_at": "2026-09-21T11:52:00+00:00"
+  },
+  {
+    "ticket_id": "T-4223",
+    "customer": "growth@lindqvist-bezorging.example",
+    "question": "Do you cover Belgium yet? Which countries are supported?",
+    "faq_id": "regions",
+    "draft": "We cover the UK, Ireland, the Netherlands, Germany and France. An address anywhere else comes back with the error region_unsupported. Check for that code before you show a result to a driver.",
+    "reply": "We cover the UK, Ireland, the Netherlands, Germany and France, so not Belgium yet. An address anywhere else comes back with the error region_unsupported. Check for that code before you show a result to a driver.",
+    "opened_at": "2026-09-22T16:11:00+00:00",
+    "replied_at": "2026-09-22T18:36:00+00:00"
+  },
+  {
+    "ticket_id": "T-4224",
+    "customer": "ops@kestrel-field.example",
+    "question": "When a customer cancels mid-shift we just stop using the route, but updates keep arriving for hours. Is there a proper way to cancel it, and an event we can listen for?",
+    "faq_id": null,
+    "draft": null,
+    "reply": "Yes: POST /v2/routes/{route_id}/cancel moves it to cancelled and stops recalculation, and since April 2026 it sends a route.cancelled event to subscribed endpoints. Without that, an active route with recalculation on keeps sending route.recalculated for up to 12 hours. Deleting the route also stops recalculation, but no route.cancelled event is sent for deletions. The details are on https://github.com/scope-templates/marlow-birchwell-docs-01/blob/main/marlow/route-lifecycle.md.",
+    "opened_at": "2026-09-23T10:48:00+00:00",
+    "replied_at": "2026-09-23T11:39:00+00:00"
+  },
+  {
+    "ticket_id": "T-4225",
+    "customer": "dev@lindqvist-bezorging.example",
+    "question": "Our dispatcher reorders stops a lot. Can we force a replan straight away, and is there a cap on how often?",
+    "faq_id": null,
+    "draft": null,
+    "reply": "Call POST /v2/routes/{route_id}/recalculate; it returns 202 Accepted at once and the new route arrives through the webhook, normally within five seconds. You can do that once per route every 30 seconds, and faster calls get 429 recalculation_too_frequent with a Retry-After header. If you change the stop list with PATCH /v2/routes/{route_id}, the route recalculates by itself with reason stop_added or stop_removed. The details are on https://github.com/scope-templates/marlow-birchwell-docs-01/blob/main/marlow/route-recalculation.md.",
+    "opened_at": "2026-09-24T19:25:00+00:00",
+    "replied_at": "2026-09-24T23:05:00+00:00"
+  },
+  {
+    "ticket_id": "T-4226",
+    "customer": "mobile@rheinkurier.example",
+    "question": "Seeing precision values like rooftop in geocode responses; what do they mean?",
+    "faq_id": "precision-values",
+    "draft": "Every geocode result has a precision field, and it is either exact or approx. exact means we matched the address to a single building; approx means we placed it on the right street or in the right area. If your drivers need a door to stop at, treat approx results with care.",
+    "reply": "precision is one of rooftop, street or locality. rooftop is on the building or its entrance, street is on the right street between known house numbers, and locality is the centre of a town, village or postcode district. The old exact and approx values went away with v1 and v2 never returns them, so if your code still compares against \"exact\", every result will look imprecise.",
+    "opened_at": "2026-09-25T13:02:00+00:00",
+    "replied_at": "2026-09-25T13:28:00+00:00"
+  },
+  {
+    "ticket_id": "T-4227",
+    "customer": "mobile@harbourline-delivery.example",
+    "question": "Driver app currently posts GPS positions five at a time. Has that limit changed? Feels like we're making too many calls.",
+    "faq_id": null,
+    "draft": null,
+    "reply": "It has. Since January 2026, POST /v2/routes/{route_id}/positions accepts up to 20 positions per request, up from 5. Send them oldest first every 15 to 30 seconds while the driver is moving; more than 20 in one request returns 400 invalid_request. Each request still counts against the 600 per minute that your whole key shares. The details are on https://github.com/scope-templates/marlow-birchwell-docs-01/blob/main/marlow/driver-positions.md.",
+    "opened_at": "2026-09-26T08:39:00+00:00",
+    "replied_at": "2026-09-26T10:14:00+00:00"
+  },
+  {
+    "ticket_id": "T-4228",
+    "customer": "product@lindqvist-bezorging.example",
+    "question": "ETAs on our tracking page are an hour out for Dutch recipients, but fine in the API response. Bug?",
+    "faq_id": null,
+    "draft": null,
+    "reply": "Not a bug on either side. ETAs are always in UTC and we do not localise them, so your tracking page has to convert to Amsterdam time before showing them. To keep them fresh, subscribe to route.recalculated rather than polling the route, since its payload carries every stop's new eta.",
+    "opened_at": "2026-09-27T15:16:00+00:00",
+    "replied_at": "2026-09-27T15:57:00+00:00"
+  },
+  {
+    "ticket_id": "T-4229",
+    "customer": "sre@brackenvans.example",
+    "question": "Is the rate limit per key or per account? Over the limit we see 429s.",
+    "faq_id": "rate-limit",
+    "draft": "Each key can make 600 requests per minute. Go over that and you get a 429 response with a Retry-After header saying how many seconds to wait. Wait at least that long before you try again rather than retrying straight away.",
+    "reply": "Each key can make 600 requests per minute. Go over that and you get a 429 response with a Retry-After header saying how many seconds to wait. Wait at least that long before you try again rather than retrying straight away.",
+    "opened_at": "2026-09-28T20:53:00+00:00",
+    "replied_at": "2026-09-28T21:56:00+00:00"
+  },
+  {
+    "ticket_id": "T-4230",
+    "customer": "planning@rheinkurier.example",
+    "question": "Need drive times from 30 vans to 40 open jobs in one call for our dispatch board.",
+    "faq_id": null,
+    "draft": null,
+    "reply": "A single POST /v2/matrix takes up to 25 origins and 25 destinations, and anything bigger fails with 422 matrix_too_large. For 30 vans and 40 jobs, four calls of 15 by 20 cover it. Each matrix counts as one request and one route against your quota, and a pair with no legal path comes back as null rather than failing the call. The details are on https://github.com/scope-templates/marlow-birchwell-docs-01/blob/main/marlow/matrix.md.",
+    "opened_at": "2026-09-29T12:30:00+00:00",
+    "replied_at": "2026-09-29T15:30:00+00:00"
+  },
+  {
+    "ticket_id": "T-4231",
+    "customer": "routing@ashgrove-grocers.example",
+    "question": "Looking for something that sorts stops into the best order and respects delivery windows. Do you have that?",
+    "faq_id": null,
+    "draft": null,
+    "reply": "POST /v2/optimize does that. Send a start point, an optional end point and up to 100 stops, each with an optional window and service_s, and it returns the order with the least driving time; stops whose window cannot be met are listed in late_stops but still placed. It does not create a route, so pass the ordered stops to POST /v2/routes afterwards, and allow up to 40 seconds for 100 stops.",
+    "opened_at": "2026-09-30T17:07:00+00:00",
+    "replied_at": "2026-09-30T17:29:00+00:00"
+  },
+  {
+    "ticket_id": "T-4232",
+    "customer": "qa@kestrel-field.example",
+    "question": "Can I get a test API key to try things before we go live?",
+    "faq_id": "getting-a-key",
+    "draft": "Sign in to the dashboard and open Settings, then API keys. Live keys start with mm_live_ and test keys start with mm_test_, so use a test key while you build. You can create a new key and revoke an old one from the same page.",
+    "reply": "Sign in to the dashboard and open Settings, then API keys. Test keys start with mm_test_ and are free, so create one of those to try things before you go live with an mm_live_ key. You can create a new key and revoke an old one from the same page.",
+    "opened_at": "2026-10-01T09:44:00+00:00",
+    "replied_at": "2026-10-01T11:12:00+00:00"
+  },
+  {
+    "ticket_id": "T-4233",
+    "customer": "frontend@pedalpost.example",
+    "question": "Weird one: when we draw a route from the polyline it ends up somewhere in the Indian Ocean.",
+    "faq_id": null,
+    "draft": null,
+    "reply": "That is nearly always the coordinate order. The decoder returns (lat, lng) pairs but GeoJSON wants [lng, lat], so swap them before building the LineString. If you would rather skip decoding, add ?geometry=geojson to GET /v2/routes/{route_id} and you get a geometry object instead.",
+    "opened_at": "2026-10-01T21:21:00+00:00",
+    "replied_at": "2026-10-01T22:08:00+00:00"
+  },
+  {
+    "ticket_id": "T-4234",
+    "customer": "fleet@brackenvans.example",
+    "question": "High-roof vans (3.1 m) keep getting sent under low bridges. Can routing take height into account?",
+    "faq_id": null,
+    "draft": null,
+    "reply": "Yes, with the van profile and a vehicle object: set height_cm to 310 (the default is 260 and the range is 150 to 400). Only the van profile reads the height, weight and width fields. If no path respects the dimensions, you get 422 no_route rather than a route under the bridge.",
+    "opened_at": "2026-10-02T11:58:00+00:00",
+    "replied_at": "2026-10-02T14:08:00+00:00"
+  },
+  {
+    "ticket_id": "T-4235",
+    "customer": "finance@colis-rapide.example",
+    "question": "Got 402 quota_exceeded this morning on everything. Are we locked out until next month?",
+    "faq_id": null,
+    "draft": null,
+    "reply": null,
+    "opened_at": "2026-10-03T14:35:00+00:00",
+    "replied_at": null
+  },
+  {
+    "ticket_id": "T-4236",
+    "customer": "sre@northwind-couriers.example",
+    "question": "Saw a burst of 503s from your API around 2am on Sunday. Anything we should know about?",
+    "faq_id": null,
+    "draft": null,
+    "reply": "That was planned maintenance, which runs between 01:00 and 04:00 UTC on Sundays and is announced 7 days ahead on status.marlowmaps.com. During a window some calls get 503 service_unavailable with a Retry-After header; retry after that many seconds and you never get partial results. GET /v2/health needs no key if you want to watch it from your own monitoring.",
+    "opened_at": "2026-10-04T16:12:00+00:00",
+    "replied_at": "2026-10-04T17:09:00+00:00"
+  },
+  {
+    "ticket_id": "T-4237",
+    "customer": "dev@quayside-logistics.example",
+    "question": "One of our older services uses marlowmaps 1.8 and started logging endpoint_retired. Anything short of a rewrite?",
+    "faq_id": null,
+    "draft": null,
+    "reply": null,
+    "opened_at": "2026-10-05T10:49:00+00:00",
+    "replied_at": null
+  },
+  {
+    "ticket_id": "T-4238",
+    "customer": "integrations@liffey-dispatch.example",
+    "question": "Trying to register a sixth URL for events and getting 409 webhook_limit_reached.",
+    "faq_id": null,
+    "draft": null,
+    "reply": null,
+    "opened_at": "2026-10-06T18:26:00+00:00",
+    "replied_at": null
+  },
+  {
+    "ticket_id": "T-4239",
+    "customer": "oncall@pennant-plumbing.example",
+    "question": "Receiver was down most of Saturday night after a botched deploy. Are those events lost?",
+    "faq_id": null,
+    "draft": null,
+    "reply": null,
+    "opened_at": "2026-10-07T13:03:00+00:00",
+    "replied_at": null
+  }
+]

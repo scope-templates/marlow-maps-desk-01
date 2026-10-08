@@ -1,0 +1,26 @@
+[project]
+name = "marlow-maps-desk"
+version = "0.3.1"
+description = "Support desk for developers integrating the Marlow Maps API"
+requires-python = ">=3.12"
+dependencies = [
+    "langchain>=1.4,<2",
+    "langchain-core>=1,<2",
+    "flask>=3.1,<4",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3,<10",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["desk"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
