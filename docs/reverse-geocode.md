@@ -56,7 +56,7 @@ print(place["formatted_address"], place["distance_m"])
 ```
 
 Reverse geocodes use the same `precision` values as forward geocodes. A `rooftop` result means a building was found
-inside the radius; `street` means the nearest match is a street segment; `locality` means only a town or district was
+inside the radius; `street` means the nearest match is a stretch of street; `locality` means only a town or district was
 within reach.
 
 ## Errors and limits
