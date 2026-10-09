@@ -1,5 +1,14 @@
 import re
 
+WORD = re.compile(r"[a-z0-9_]+")
+COMMON_WORDS = frozenset(
+    "how do i my the a an is can in to of we our it what with for on and you your be get when does there".split()
+)
+
+
+def words(text: str) -> set[str]:
+    return set(WORD.findall(text.lower())) - COMMON_WORDS
+
 
 def ticket_id(number: int) -> str:
     return f"T-{number}"

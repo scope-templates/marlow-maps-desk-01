@@ -15,7 +15,7 @@ Drafts are written by a LangChain chain in `desk/chain.py`. With `MARLOW_MODEL` 
 
 ## Endpoints
 
-All requests and responses are JSON.
+All requests and responses in this table are JSON; the developer docs routes below serve HTML.
 
 | Method | Path | Body | Returns |
 |---|---|---|---|
@@ -36,6 +36,16 @@ The desk matches a ticket to one of the eight entries in `desk/faq.py` by the wo
 ## Docs
 
 The developer docs at https://github.com/scope-templates/marlow-birchwell-docs-01/tree/main/marlow are the source of truth for every integration question; the FAQ is the desk's shorthand.
+
+## Developer docs
+
+The desk also serves the developer docs as a site at `/docs`, with a keyword page search. The pages live in `docs/` and are copied unchanged from the docs repo at https://github.com/scope-templates/marlow-birchwell-docs-01/tree/main/marlow, which stays where pages are edited.
+
+| Method | Path | Returns |
+|---|---|---|
+| GET | `/docs` | every page by title, alphabetically, each linking to its page |
+| GET | `/docs/<slug>` | the page `docs/<slug>.md` rendered to HTML with its updated date; `404` for an unknown slug |
+| GET | `/docs/search?q=...` | the pages that share the most words with `q`, each with a link and the first line of its body that holds one of the words |
 
 ## Tests
 

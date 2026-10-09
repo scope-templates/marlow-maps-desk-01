@@ -4,6 +4,7 @@ from pathlib import Path
 from flask import Flask, jsonify, request
 
 from .chain import build_chain
+from .docs_site import add_docs_site
 from .faq import FAQ, pick
 from .text import required_text
 from .tickets import TicketStore
@@ -71,6 +72,7 @@ def create_app(db_path: Path | str = DB_PATH, seed_path: Path | None = SEED_PATH
     def health():
         return jsonify(status="ok", model=model_name)
 
+    add_docs_site(app)
     return app
 
 

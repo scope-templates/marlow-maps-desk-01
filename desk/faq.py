@@ -1,8 +1,4 @@
-import re
-
-COMMON_WORDS = frozenset(
-    "how do i my the a an is can in to of we our it what with for on and you your be get when does there".split()
-)
+from .text import words
 
 FAQ = [
     {
@@ -92,9 +88,9 @@ FAQ = [
 
 
 def pick(question: str) -> dict | None:
-    asked = set(re.findall(r"[a-z0-9_]+", question.lower())) - COMMON_WORDS
+    asked = words(question)
     shared, entry = max(
-        ((len(asked & set(re.findall(r"[a-z0-9_]+", candidate["question"].lower()))), candidate) for candidate in FAQ),
+        ((len(asked & words(candidate["question"])), candidate) for candidate in FAQ),
         key=lambda pair: pair[0],
     )
     return entry if shared >= 2 else None
